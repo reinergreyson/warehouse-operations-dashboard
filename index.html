@@ -4,9 +4,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Interactive warehouse operations dashboard using simulated data.">
+  <meta name="description" content="Interactive warehouse operations dashboard with simulated productivity, inventory, and incident data.">
   <title>Warehouse Operations Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     :root {
       --navy: #142b49;
@@ -121,7 +122,7 @@
       color: var(--muted);
     }
 
-    select, input, button {
+    select, button {
       width: 100%;
       padding: 11px;
       border-radius: 6px;
@@ -141,6 +142,11 @@
     }
 
     button:hover { background: var(--blue); }
+
+    button:focus-visible, select:focus-visible {
+      outline: 3px solid var(--yellow);
+      outline-offset: 2px;
+    }
 
     .kpis {
       display: grid;
@@ -173,6 +179,7 @@
     .kpi-note {
       color: var(--muted);
       font-size: 12px;
+      line-height: 1.5;
     }
 
     .panels {
@@ -191,6 +198,7 @@
     }
 
     .chart-wrap {
+      position: relative;
       height: 300px;
       margin-top: 20px;
     }
@@ -278,12 +286,13 @@
 
     @media (max-width: 520px) {
       main { padding: 0 4%; }
-      .kpis, .filters { grid-template-columns: 1fr; }
       header { padding: 22px 4%; }
+      .kpis, .filters { grid-template-columns: 1fr; }
       .kpi { padding: 16px; }
     }
   </style>
 </head>
+
 <body>
   <header>
     <div class="header-content">
@@ -292,7 +301,7 @@
         <h1>Warehouse Operations Dashboard</h1>
         <p>Monitor productivity, inventory accuracy, and operational incidents.</p>
       </div>
-      <div class="demo-label">DEMO PROJECT · SIMULATED DATA</div>
+      <div class="demo-label">PORTFOLIO DEMO · SIMULATED DATA</div>
     </div>
   </header>
 
@@ -313,6 +322,7 @@
           <option value="Shipping">Shipping</option>
         </select>
       </div>
+
       <div>
         <label for="date-filter">REPORTING PERIOD</label>
         <select id="date-filter">
@@ -321,6 +331,7 @@
           <option value="30">Last 30 days</option>
         </select>
       </div>
+
       <div>
         <label for="status-filter">ISSUE STATUS</label>
         <select id="status-filter">
@@ -330,6 +341,7 @@
           <option value="Resolved">Resolved</option>
         </select>
       </div>
+
       <button id="reset-button" type="button">Reset Filters</button>
     </section>
 
@@ -337,18 +349,21 @@
       <article class="kpi">
         <div class="kpi-label">UNITS PROCESSED</div>
         <div class="kpi-value" id="units-value">—</div>
-        <div class="kpi-note">Total units in selected period</div>
+        <div class="kpi-note" id="units-note">Total units in selected period</div>
       </article>
+
       <article class="kpi">
         <div class="kpi-label">TARGET ATTAINMENT</div>
         <div class="kpi-value" id="productivity-value">—</div>
-        <div class="kpi-note">Actual units compared with target</div>
+        <div class="kpi-note">Actual units divided by target units</div>
       </article>
+
       <article class="kpi">
         <div class="kpi-label">OPEN INCIDENTS</div>
         <div class="kpi-value" id="incidents-value">—</div>
         <div class="kpi-note">Open or actively investigated issues</div>
       </article>
+
       <article class="kpi">
         <div class="kpi-label">INVENTORY DISCREPANCIES</div>
         <div class="kpi-value" id="inventory-value">—</div>
@@ -360,10 +375,11 @@
       <article class="panel">
         <div class="section-heading">
           <h2>Daily Productivity</h2>
-          <span class="muted">Actual vs. target units</span>
+          <span class="muted" id="productivity-caption">7-day sample · actual vs. target</span>
         </div>
         <div class="chart-wrap">
-          <canvas id="productivity-chart" role="img" aria-label="Bar chart comparing daily actual productivity with targets"></canvas>
+          <canvas id="productivity-chart" role="img"
+            aria-label="Bar chart comparing daily actual productivity with targets"></canvas>
         </div>
       </article>
 
@@ -373,7 +389,8 @@
           <span class="muted">By current status</span>
         </div>
         <div class="chart-wrap">
-          <canvas id="issue-chart" role="img" aria-label="Doughnut chart of issue status counts"></canvas>
+          <canvas id="issue-chart" role="img"
+            aria-label="Doughnut chart showing issue counts by status"></canvas>
         </div>
       </article>
     </section>
@@ -383,7 +400,11 @@
         <h2>Operational Issues</h2>
         <span class="muted" id="issue-count">0 records</span>
       </div>
-      <p class="muted">Example incident and inventory records for demonstrating operational follow-up.</p>
+
+      <p class="muted">
+        Fictional incident and inventory records for demonstrating operational follow-up.
+      </p>
+
       <div class="table-wrap">
         <table>
           <thead>
@@ -407,13 +428,12 @@
   </main>
 
   <footer>
-    Portfolio demonstration project built with HTML, CSS, JavaScript, and Chart.js.<br>
-    All figures and issue records are fictional and for demonstration purposes only.
+    Portfolio demonstration built with HTML, CSS, JavaScript, and Chart.js.<br>
+    All figures and issue records are fictional. Longer reporting periods are estimates
+    based on the seven-day sample, not actual historical records.
   </footer>
 
   <script>
-    const departments = ["Picking", "Packing", "Receiving", "Shipping"];
-
     const dailyData = [
       { day: "Day 1", department: "Picking", actual: 920, target: 900 },
       { day: "Day 2", department: "Picking", actual: 880, target: 900 },
@@ -422,6 +442,7 @@
       { day: "Day 5", department: "Picking", actual: 910, target: 900 },
       { day: "Day 6", department: "Picking", actual: 990, target: 900 },
       { day: "Day 7", department: "Picking", actual: 970, target: 900 },
+
       { day: "Day 1", department: "Packing", actual: 790, target: 800 },
       { day: "Day 2", department: "Packing", actual: 820, target: 800 },
       { day: "Day 3", department: "Packing", actual: 850, target: 800 },
@@ -429,6 +450,7 @@
       { day: "Day 5", department: "Packing", actual: 830, target: 800 },
       { day: "Day 6", department: "Packing", actual: 860, target: 800 },
       { day: "Day 7", department: "Packing", actual: 840, target: 800 },
+
       { day: "Day 1", department: "Receiving", actual: 650, target: 700 },
       { day: "Day 2", department: "Receiving", actual: 720, target: 700 },
       { day: "Day 3", department: "Receiving", actual: 740, target: 700 },
@@ -436,6 +458,7 @@
       { day: "Day 5", department: "Receiving", actual: 710, target: 700 },
       { day: "Day 6", department: "Receiving", actual: 760, target: 700 },
       { day: "Day 7", department: "Receiving", actual: 730, target: 700 },
+
       { day: "Day 1", department: "Shipping", actual: 570, target: 600 },
       { day: "Day 2", department: "Shipping", actual: 610, target: 600 },
       { day: "Day 3", department: "Shipping", actual: 630, target: 600 },
@@ -465,6 +488,10 @@
     const dateFilter = document.getElementById("date-filter");
     const statusFilter = document.getElementById("status-filter");
 
+    function formatNumber(value) {
+      return Math.round(value).toLocaleString("en-US");
+    }
+
     function getFilteredData() {
       const department = departmentFilter.value;
       const days = Number(dateFilter.value);
@@ -482,15 +509,12 @@
       return { filteredDaily, filteredIssues, days };
     }
 
-    function formatNumber(value) {
-      return Math.round(value).toLocaleString("en-US");
-    }
-
     function renderTable(filteredIssues) {
       const tbody = document.getElementById("issues-table");
 
       if (filteredIssues.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No issues match these filters.</td></tr>';
+        tbody.innerHTML =
+          '<tr><td colspan="5" class="empty-state">No issues match these filters.</td></tr>';
         return;
       }
 
@@ -511,43 +535,72 @@
     }
 
     function renderCharts(filteredDaily, filteredIssues, days) {
-      const labels = filteredDaily.map(item => item.day + " · " + item.department);
-      const actual = filteredDaily.map(item => item.actual);
-      const target = filteredDaily.map(item => item.target);
+      // The dataset contains seven observations per department.
+      // For longer periods, the chart repeats the sample pattern as an
+      // illustrative projection. It does not represent actual daily history.
+      const chartData = [];
+
+      for (let day = 1; day <= days; day++) {
+        const sampleDay = ((day - 1) % 7) + 1;
+
+        filteredDaily
+          .filter(item => item.day === "Day " + sampleDay)
+          .forEach(item => {
+            chartData.push({
+              label: "Day " + day + " · " + item.department,
+              actual: item.actual,
+              target: item.target
+            });
+          });
+      }
 
       if (productivityChart) productivityChart.destroy();
 
-      productivityChart = new Chart(document.getElementById("productivity-chart"), {
-        type: "bar",
-        data: {
-          labels,
-          datasets: [
-            {
-              label: "Actual units",
-              data: actual,
-              backgroundColor: "#245a8d",
-              borderRadius: 4
-            },
-            {
-              label: "Target units",
-              data: target,
-              backgroundColor: "#ffc220",
-              borderRadius: 4
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: { beginAtZero: true, title: { display: true, text: "Units" } },
-            x: { ticks: { maxRotation: 60, minRotation: 35, autoSkip: true } }
+      productivityChart = new Chart(
+        document.getElementById("productivity-chart"),
+        {
+          type: "bar",
+          data: {
+            labels: chartData.map(item => item.label),
+            datasets: [
+              {
+                label: "Actual units",
+                data: chartData.map(item => item.actual),
+                backgroundColor: "#245a8d",
+                borderRadius: 3
+              },
+              {
+                label: "Target units",
+                data: chartData.map(item => item.target),
+                backgroundColor: "#ffc220",
+                borderRadius: 3
+              }
+            ]
           },
-          plugins: {
-            legend: { position: "bottom" }
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: { display: true, text: "Units" }
+              },
+              x: {
+                ticks: {
+                  maxRotation: 60,
+                  minRotation: 35,
+                  autoSkip: true,
+                  maxTicksLimit: 12
+                }
+              }
+            },
+            plugins: {
+              legend: { position: "bottom" },
+              tooltip: { mode: "index", intersect: false }
+            }
           }
         }
-      });
+      );
 
       const statuses = ["Open", "In Progress", "Resolved"];
       const statusCounts = statuses.map(status =>
@@ -556,59 +609,108 @@
 
       if (issueChart) issueChart.destroy();
 
-      issueChart = new Chart(document.getElementById("issue-chart"), {
-        type: "doughnut",
-        data: {
-          labels: statuses,
-          datasets: [{
-            data: statusCounts,
-            backgroundColor: ["#bd4141", "#ffc220", "#25805b"],
-            borderWidth: 2,
-            borderColor: "#ffffff"
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: "bottom" } }
+      issueChart = new Chart(
+        document.getElementById("issue-chart"),
+        {
+          type: "doughnut",
+          data: {
+            labels: statuses,
+            datasets: [{
+              data: statusCounts,
+              backgroundColor: ["#bd4141", "#ffc220", "#25805b"],
+              borderWidth: 2,
+              borderColor: "#ffffff"
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: "bottom" }
+            }
+          }
         }
-      });
+      );
+
+      document.getElementById("productivity-caption").textContent =
+        days === 7
+          ? "7-day sample · actual vs. target"
+          : `${days}-day illustrative projection · sample pattern repeated`;
     }
 
     function updateDashboard() {
       const { filteredDaily, filteredIssues, days } = getFilteredData();
 
-      // The sample contains seven daily observations per department.
-      // Longer period choices scale the sample totals for demonstration only.
+      const sampleActual = filteredDaily.reduce(
+        (sum, item) => sum + item.actual, 0
+      );
+      const sampleTarget = filteredDaily.reduce(
+        (sum, item) => sum + item.target, 0
+      );
+
       const periodMultiplier = days / 7;
-      const actualTotal = filteredDaily.reduce((sum, item) => sum + item.actual, 0) * periodMultiplier;
-      const targetTotal = filteredDaily.reduce((sum, item) => sum + item.target, 0) * periodMultiplier;
-      const attainment = targetTotal ? (actualTotal / targetTotal) * 100 : 0;
+      const actualTotal = sampleActual * periodMultiplier;
+      const attainment = sampleTarget
+        ? (sampleActual / sampleTarget) * 100
+        : 0;
 
-      const openIssues = filteredIssues.filter(issue => issue.status !== "Resolved").length;
-      const inventoryIssues = filteredIssues.filter(issue => issue.inventory && issue.status !== "Resolved").length;
+      const openIssues = filteredIssues.filter(
+        issue => issue.status !== "Resolved"
+      ).length;
 
-      document.getElementById("units-value").textContent = formatNumber(actualTotal);
-      document.getElementById("productivity-value").textContent = attainment.toFixed(1) + "%";
+      const inventoryIssues = filteredIssues.filter(
+        issue => issue.inventory && issue.status !== "Resolved"
+      ).length;
+
+      document.getElementById("units-value").textContent =
+        formatNumber(actualTotal);
+
+      document.getElementById("units-note").textContent =
+        days === 7
+          ? "Total units in 7-day sample"
+          : `Estimated ${days}-day total based on 7-day sample`;
+
+      document.getElementById("productivity-value").textContent =
+        attainment.toFixed(1) + "%";
+
       document.getElementById("incidents-value").textContent = openIssues;
       document.getElementById("inventory-value").textContent = inventoryIssues;
+
       document.getElementById("issue-count").textContent =
-        filteredIssues.length + (filteredIssues.length === 1 ? " record" : " records");
+        filteredIssues.length +
+        (filteredIssues.length === 1 ? " record" : " records");
+
       document.getElementById("last-updated").textContent =
-        "Updated " + new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        "Updated " + new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit"
+        });
 
       renderTable(filteredIssues);
       renderCharts(filteredDaily, filteredIssues, days);
 
-      let summary = `Selected departments processed ${formatNumber(actualTotal)} simulated units, reaching ${attainment.toFixed(1)}% of the modeled target. `;
+      let summary =
+        `The selected departments processed ${formatNumber(actualTotal)} ` +
+        `estimated or sampled units, reaching ${attainment.toFixed(1)}% ` +
+        `of the modeled target. `;
 
       if (attainment >= 100) {
-        summary += "Overall output is meeting or exceeding the target in this sample.";
+        summary += "Output meets or exceeds the modeled target in this sample. ";
       } else {
-        summary += "Output is below the modeled target. Review staffing, workflow bottlenecks, and equipment availability.";
+        summary +=
+          "Output is below the modeled target. Review workflow bottlenecks, " +
+          "staffing alignment, and equipment availability. ";
       }
 
-      summary += ` There are ${openIssues} open or in-progress issues and ${inventoryIssues} unresolved inventory variances in the displayed records.`;
+      summary +=
+        `There are ${openIssues} open or in-progress issues and ` +
+        `${inventoryIssues} unresolved inventory variances in the displayed records.`;
+
+      if (days > 7) {
+        summary +=
+          " The longer reporting period is a projection based on a repeated " +
+          "seven-day sample, not actual historical data.";
+      }
 
       document.getElementById("insight-text").textContent = summary;
     }
