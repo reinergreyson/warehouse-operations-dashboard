@@ -1,0 +1,630 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Interactive warehouse operations dashboard using simulated data.">
+  <title>Warehouse Operations Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --navy: #142b49;
+      --blue: #245a8d;
+      --yellow: #ffc220;
+      --background: #f3f6fa;
+      --white: #ffffff;
+      --text: #243247;
+      --muted: #68778a;
+      --border: #dfe6ee;
+      --red: #bd4141;
+      --green: #25805b;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--background);
+      color: var(--text);
+    }
+
+    header {
+      background: var(--navy);
+      color: white;
+      padding: 25px 5%;
+      border-bottom: 5px solid var(--yellow);
+    }
+
+    .header-content {
+      max-width: 1400px;
+      margin: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      color: var(--yellow);
+      font-size: 13px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 8px 0;
+      font-size: clamp(25px, 4vw, 36px);
+    }
+
+    header p {
+      margin: 0;
+      color: #d9e3ef;
+      line-height: 1.5;
+    }
+
+    .demo-label {
+      background: var(--yellow);
+      color: var(--navy);
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    main {
+      max-width: 1400px;
+      margin: 25px auto;
+      padding: 0 5%;
+    }
+
+    .section-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 25px 0 14px;
+    }
+
+    h2 {
+      color: var(--navy);
+      font-size: 20px;
+      margin: 0;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(150px, 1fr)) auto;
+      gap: 14px;
+      padding: 18px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 12px;
+      font-weight: bold;
+      color: var(--muted);
+    }
+
+    select, input, button {
+      width: 100%;
+      padding: 11px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+      font: inherit;
+    }
+
+    button {
+      align-self: end;
+      background: var(--navy);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      border-color: var(--navy);
+    }
+
+    button:hover { background: var(--blue); }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .kpi {
+      background: var(--white);
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      border-top: 4px solid var(--yellow);
+      box-shadow: 0 3px 10px rgba(20, 43, 73, 0.04);
+    }
+
+    .kpi-label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .kpi-value {
+      color: var(--navy);
+      font-size: clamp(25px, 3vw, 34px);
+      font-weight: bold;
+      margin: 12px 0 8px;
+    }
+
+    .kpi-note {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .panels {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .panel {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      min-width: 0;
+    }
+
+    .chart-wrap {
+      height: 300px;
+      margin-top: 20px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin-top: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 12px 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 5px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .open {
+      color: #8e3030;
+      background: #fde8e8;
+    }
+
+    .progress {
+      color: #875b00;
+      background: #fff1cc;
+    }
+
+    .resolved {
+      color: #176545;
+      background: #ddf5e9;
+    }
+
+    .empty-state {
+      padding: 20px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .insight {
+      margin-top: 18px;
+      padding: 18px;
+      background: #eaf1f9;
+      border-left: 5px solid var(--blue);
+      border-radius: 6px;
+      line-height: 1.6;
+    }
+
+    .insight strong { color: var(--navy); }
+
+    footer {
+      margin-top: 35px;
+      padding: 22px 5%;
+      text-align: center;
+      background: var(--navy);
+      color: #d9e3ef;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 900px) {
+      .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .panels { grid-template-columns: 1fr; }
+      .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 520px) {
+      main { padding: 0 4%; }
+      .kpis, .filters { grid-template-columns: 1fr; }
+      header { padding: 22px 4%; }
+      .kpi { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <div>
+        <div class="brand">Operations • Performance • Accountability</div>
+        <h1>Warehouse Operations Dashboard</h1>
+        <p>Monitor productivity, inventory accuracy, and operational incidents.</p>
+      </div>
+      <div class="demo-label">DEMO PROJECT · SIMULATED DATA</div>
+    </div>
+  </header>
+
+  <main>
+    <div class="section-heading">
+      <h2>Operations Overview</h2>
+      <span class="muted" id="last-updated">Dashboard loaded</span>
+    </div>
+
+    <section class="filters" aria-label="Dashboard filters">
+      <div>
+        <label for="department-filter">DEPARTMENT</label>
+        <select id="department-filter">
+          <option value="All">All departments</option>
+          <option value="Picking">Picking</option>
+          <option value="Packing">Packing</option>
+          <option value="Receiving">Receiving</option>
+          <option value="Shipping">Shipping</option>
+        </select>
+      </div>
+      <div>
+        <label for="date-filter">REPORTING PERIOD</label>
+        <select id="date-filter">
+          <option value="7">Last 7 days</option>
+          <option value="14">Last 14 days</option>
+          <option value="30">Last 30 days</option>
+        </select>
+      </div>
+      <div>
+        <label for="status-filter">ISSUE STATUS</label>
+        <select id="status-filter">
+          <option value="All">All statuses</option>
+          <option value="Open">Open</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Resolved">Resolved</option>
+        </select>
+      </div>
+      <button id="reset-button" type="button">Reset Filters</button>
+    </section>
+
+    <section class="kpis" aria-label="Key performance indicators">
+      <article class="kpi">
+        <div class="kpi-label">UNITS PROCESSED</div>
+        <div class="kpi-value" id="units-value">—</div>
+        <div class="kpi-note">Total units in selected period</div>
+      </article>
+      <article class="kpi">
+        <div class="kpi-label">TARGET ATTAINMENT</div>
+        <div class="kpi-value" id="productivity-value">—</div>
+        <div class="kpi-note">Actual units compared with target</div>
+      </article>
+      <article class="kpi">
+        <div class="kpi-label">OPEN INCIDENTS</div>
+        <div class="kpi-value" id="incidents-value">—</div>
+        <div class="kpi-note">Open or actively investigated issues</div>
+      </article>
+      <article class="kpi">
+        <div class="kpi-label">INVENTORY DISCREPANCIES</div>
+        <div class="kpi-value" id="inventory-value">—</div>
+        <div class="kpi-note">Unresolved inventory variances</div>
+      </article>
+    </section>
+
+    <section class="panels">
+      <article class="panel">
+        <div class="section-heading">
+          <h2>Daily Productivity</h2>
+          <span class="muted">Actual vs. target units</span>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="productivity-chart" role="img" aria-label="Bar chart comparing daily actual productivity with targets"></canvas>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="section-heading">
+          <h2>Issue Breakdown</h2>
+          <span class="muted">By current status</span>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="issue-chart" role="img" aria-label="Doughnut chart of issue status counts"></canvas>
+        </div>
+      </article>
+    </section>
+
+    <section class="panel" style="margin-top: 18px;">
+      <div class="section-heading">
+        <h2>Operational Issues</h2>
+        <span class="muted" id="issue-count">0 records</span>
+      </div>
+      <p class="muted">Example incident and inventory records for demonstrating operational follow-up.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Issue ID</th>
+              <th>Department</th>
+              <th>Issue Type</th>
+              <th>Priority</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="issues-table"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="insight" aria-live="polite">
+      <strong>Operations Summary</strong>
+      <div id="insight-text">Loading summary...</div>
+    </section>
+  </main>
+
+  <footer>
+    Portfolio demonstration project built with HTML, CSS, JavaScript, and Chart.js.<br>
+    All figures and issue records are fictional and for demonstration purposes only.
+  </footer>
+
+  <script>
+    const departments = ["Picking", "Packing", "Receiving", "Shipping"];
+
+    const dailyData = [
+      { day: "Day 1", department: "Picking", actual: 920, target: 900 },
+      { day: "Day 2", department: "Picking", actual: 880, target: 900 },
+      { day: "Day 3", department: "Picking", actual: 960, target: 900 },
+      { day: "Day 4", department: "Picking", actual: 940, target: 900 },
+      { day: "Day 5", department: "Picking", actual: 910, target: 900 },
+      { day: "Day 6", department: "Picking", actual: 990, target: 900 },
+      { day: "Day 7", department: "Picking", actual: 970, target: 900 },
+      { day: "Day 1", department: "Packing", actual: 790, target: 800 },
+      { day: "Day 2", department: "Packing", actual: 820, target: 800 },
+      { day: "Day 3", department: "Packing", actual: 850, target: 800 },
+      { day: "Day 4", department: "Packing", actual: 780, target: 800 },
+      { day: "Day 5", department: "Packing", actual: 830, target: 800 },
+      { day: "Day 6", department: "Packing", actual: 860, target: 800 },
+      { day: "Day 7", department: "Packing", actual: 840, target: 800 },
+      { day: "Day 1", department: "Receiving", actual: 650, target: 700 },
+      { day: "Day 2", department: "Receiving", actual: 720, target: 700 },
+      { day: "Day 3", department: "Receiving", actual: 740, target: 700 },
+      { day: "Day 4", department: "Receiving", actual: 690, target: 700 },
+      { day: "Day 5", department: "Receiving", actual: 710, target: 700 },
+      { day: "Day 6", department: "Receiving", actual: 760, target: 700 },
+      { day: "Day 7", department: "Receiving", actual: 730, target: 700 },
+      { day: "Day 1", department: "Shipping", actual: 570, target: 600 },
+      { day: "Day 2", department: "Shipping", actual: 610, target: 600 },
+      { day: "Day 3", department: "Shipping", actual: 630, target: 600 },
+      { day: "Day 4", department: "Shipping", actual: 590, target: 600 },
+      { day: "Day 5", department: "Shipping", actual: 620, target: 600 },
+      { day: "Day 6", department: "Shipping", actual: 650, target: 600 },
+      { day: "Day 7", department: "Shipping", actual: 640, target: 600 }
+    ];
+
+    const issues = [
+      { id: "INC-104", department: "Picking", type: "Equipment delay", priority: "High", status: "Open", inventory: false },
+      { id: "INV-208", department: "Receiving", type: "Inventory variance", priority: "Medium", status: "Open", inventory: true },
+      { id: "INC-105", department: "Packing", type: "Safety review", priority: "High", status: "In Progress", inventory: false },
+      { id: "INV-209", department: "Shipping", type: "Inventory variance", priority: "Low", status: "Resolved", inventory: true },
+      { id: "INC-106", department: "Shipping", type: "Dispatch delay", priority: "Medium", status: "In Progress", inventory: false },
+      { id: "INV-210", department: "Picking", type: "Inventory variance", priority: "High", status: "Open", inventory: true },
+      { id: "INC-107", department: "Receiving", type: "Process review", priority: "Low", status: "Resolved", inventory: false },
+      { id: "INV-211", department: "Packing", type: "Inventory variance", priority: "Medium", status: "In Progress", inventory: true },
+      { id: "INC-108", department: "Picking", type: "Equipment check", priority: "Medium", status: "Resolved", inventory: false },
+      { id: "INV-212", department: "Shipping", type: "Inventory variance", priority: "High", status: "Open", inventory: true }
+    ];
+
+    let productivityChart;
+    let issueChart;
+
+    const departmentFilter = document.getElementById("department-filter");
+    const dateFilter = document.getElementById("date-filter");
+    const statusFilter = document.getElementById("status-filter");
+
+    function getFilteredData() {
+      const department = departmentFilter.value;
+      const days = Number(dateFilter.value);
+      const status = statusFilter.value;
+
+      const filteredDaily = dailyData.filter(item =>
+        department === "All" || item.department === department
+      );
+
+      const filteredIssues = issues.filter(item =>
+        (department === "All" || item.department === department) &&
+        (status === "All" || item.status === status)
+      );
+
+      return { filteredDaily, filteredIssues, days };
+    }
+
+    function formatNumber(value) {
+      return Math.round(value).toLocaleString("en-US");
+    }
+
+    function renderTable(filteredIssues) {
+      const tbody = document.getElementById("issues-table");
+
+      if (filteredIssues.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No issues match these filters.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filteredIssues.map(issue => {
+        const statusClass = issue.status === "Open"
+          ? "open"
+          : issue.status === "Resolved" ? "resolved" : "progress";
+
+        return `
+          <tr>
+            <td>${issue.id}</td>
+            <td>${issue.department}</td>
+            <td>${issue.type}</td>
+            <td>${issue.priority}</td>
+            <td><span class="status ${statusClass}">${issue.status}</span></td>
+          </tr>`;
+      }).join("");
+    }
+
+    function renderCharts(filteredDaily, filteredIssues, days) {
+      const labels = filteredDaily.map(item => item.day + " · " + item.department);
+      const actual = filteredDaily.map(item => item.actual);
+      const target = filteredDaily.map(item => item.target);
+
+      if (productivityChart) productivityChart.destroy();
+
+      productivityChart = new Chart(document.getElementById("productivity-chart"), {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: "Actual units",
+              data: actual,
+              backgroundColor: "#245a8d",
+              borderRadius: 4
+            },
+            {
+              label: "Target units",
+              data: target,
+              backgroundColor: "#ffc220",
+              borderRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, title: { display: true, text: "Units" } },
+            x: { ticks: { maxRotation: 60, minRotation: 35, autoSkip: true } }
+          },
+          plugins: {
+            legend: { position: "bottom" }
+          }
+        }
+      });
+
+      const statuses = ["Open", "In Progress", "Resolved"];
+      const statusCounts = statuses.map(status =>
+        filteredIssues.filter(issue => issue.status === status).length
+      );
+
+      if (issueChart) issueChart.destroy();
+
+      issueChart = new Chart(document.getElementById("issue-chart"), {
+        type: "doughnut",
+        data: {
+          labels: statuses,
+          datasets: [{
+            data: statusCounts,
+            backgroundColor: ["#bd4141", "#ffc220", "#25805b"],
+            borderWidth: 2,
+            borderColor: "#ffffff"
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: "bottom" } }
+        }
+      });
+    }
+
+    function updateDashboard() {
+      const { filteredDaily, filteredIssues, days } = getFilteredData();
+
+      // The sample contains seven daily observations per department.
+      // Longer period choices scale the sample totals for demonstration only.
+      const periodMultiplier = days / 7;
+      const actualTotal = filteredDaily.reduce((sum, item) => sum + item.actual, 0) * periodMultiplier;
+      const targetTotal = filteredDaily.reduce((sum, item) => sum + item.target, 0) * periodMultiplier;
+      const attainment = targetTotal ? (actualTotal / targetTotal) * 100 : 0;
+
+      const openIssues = filteredIssues.filter(issue => issue.status !== "Resolved").length;
+      const inventoryIssues = filteredIssues.filter(issue => issue.inventory && issue.status !== "Resolved").length;
+
+      document.getElementById("units-value").textContent = formatNumber(actualTotal);
+      document.getElementById("productivity-value").textContent = attainment.toFixed(1) + "%";
+      document.getElementById("incidents-value").textContent = openIssues;
+      document.getElementById("inventory-value").textContent = inventoryIssues;
+      document.getElementById("issue-count").textContent =
+        filteredIssues.length + (filteredIssues.length === 1 ? " record" : " records");
+      document.getElementById("last-updated").textContent =
+        "Updated " + new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+      renderTable(filteredIssues);
+      renderCharts(filteredDaily, filteredIssues, days);
+
+      let summary = `Selected departments processed ${formatNumber(actualTotal)} simulated units, reaching ${attainment.toFixed(1)}% of the modeled target. `;
+
+      if (attainment >= 100) {
+        summary += "Overall output is meeting or exceeding the target in this sample.";
+      } else {
+        summary += "Output is below the modeled target. Review staffing, workflow bottlenecks, and equipment availability.";
+      }
+
+      summary += ` There are ${openIssues} open or in-progress issues and ${inventoryIssues} unresolved inventory variances in the displayed records.`;
+
+      document.getElementById("insight-text").textContent = summary;
+    }
+
+    document.getElementById("reset-button").addEventListener("click", () => {
+      departmentFilter.value = "All";
+      dateFilter.value = "7";
+      statusFilter.value = "All";
+      updateDashboard();
+    });
+
+    departmentFilter.addEventListener("change", updateDashboard);
+    dateFilter.addEventListener("change", updateDashboard);
+    statusFilter.addEventListener("change", updateDashboard);
+
+    updateDashboard();
+  </script>
+</body>
+</html>
